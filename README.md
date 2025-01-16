@@ -8,12 +8,12 @@ The Stripe Microservice for Bob is a lightweight, deployable service designed to
 
 To set up the microservice, ensure you have the following environment variables configured in your `.env` file:
 
-plaintext
+```
 STRIPE_SECRET_KEY=
 STRIPE_PRICE_ID=
 CLIENT_URL=
 HOME_URL=
-
+```
 
 These variables are crucial for the microservice to interact with Stripe's API and redirect users appropriately after transactions.
 
@@ -21,10 +21,10 @@ These variables are crucial for the microservice to interact with Stripe's API a
 
 To quickly start the application, use the provided bash script:
 
-bash
+```
 chmod +x run-stripe-microservice.sh
 ./run-stripe-microservice.sh
-
+```
 
 This script will check for necessary dependencies, set up the environment, and start the application.
 
@@ -32,15 +32,49 @@ This script will check for necessary dependencies, set up the environment, and s
 
 For development purposes, you can run the application using nodemon for automatic restarts on file changes:
 
-bash
+```
 npm run dev
-
+```
 
 This command uses nodemon to watch for changes and restart the server automatically, facilitating a smoother development workflow.
 
 ## Using HOME_URL
 
 The `HOME_URL` environment variable is used to redirect users back to your application from the pre-built success and cancel pages. Ensure this URL points to the appropriate location in your application where users should land after a transaction.
+
+## Endpoints
+
+### POST /api/checkout
+
+This endpoint creates a Stripe checkout session for subscriptions. The `priceId` is automatically retrieved from the environment configuration, ensuring a consistent subscription plan is used across all transactions.
+
+Example request:
+
+```
+POST /api/checkout
+Content-Type: application/json
+{}
+```
+
+No additional data is required in the request body.
+
+### Example Response
+
+```json
+{
+    "id": "cs_test_a1WHz0EUClolNhVTsmjK7KWyVhUA6EqBqOESbVxUdTmOrrVBZzUnNmnYzz",
+    "object": "checkout.session",
+    "amount_subtotal": 3500,
+    "amount_total": 3500,
+    "currency": "usd",
+    "mode": "subscription",
+    "payment_status": "unpaid",
+    "status": "open",
+    "success_url": "http://localhost:5001/success",
+    "cancel_url": "http://localhost:5001/cancel",
+    "url": "https://checkout.stripe.com/c/pay/cs_test_a1WHz0EUClolNhVTsmjK7KWyVhUA6EqBqOESbVxUdTmOrrVBZzUnNmnYzz#fidkdWxOYHwnPyd1blpxYHZxWjA0S1M8SU9JdkNCYkFPS0F0V2lHY3FKM3NRdDZuQTBkTmBIQzUwdGxVbTd9T3FxTVxzNWBsd25EN3dOM288cXRSRnJyNzYzTTVGdDRtQFJXRkJqcjdjSlVmNTVoNVBCXDd%2FdycpJ2N3amhWYHdzYHcnP3F3cGApJ2lkfGpwcVF8dWAnPyd2bGtiaWBabHFgaCcpJ2BrZGdpYFVpZGZgbWppYWB3dic%2FcXdwYHgl"
+}
+```
 
 ## Project Structure
 
@@ -110,73 +144,82 @@ The application uses environment variables for configuration, loaded via dotenv:
    ```
 
 #### 2. Install Required Software
-Update package list
 
-bash
+```bash
+# Update package list
 sudo apt update
 
-Install Node.js and npm
+# Install Node.js and npm
 curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
 sudo apt install -y nodejs
-Install Nginx
-sudo apt install nginx
-Install Certbot and Nginx plugin
-sudo apt install certbot python3-certbot-nginx
 
+# Install Nginx
+sudo apt install nginx
+
+# Install Certbot and Nginx plugin
+sudo apt install certbot python3-certbot-nginx
+```
 
 #### 3. Deploy Your Application
 
-Clone your repository
+```bash
+# Clone your repository
 git clone https://github.com/yourusername/your-repo.git
 cd your-repo
-Install dependencies
-npm install
-Create .env file
-nano .env
-Add your environment variables here
-Start your application
-node server.js
 
+# Install dependencies
+npm install
+
+# Create .env file
+nano .env
+# Add your environment variables here
+
+# Start your application
+node server.js
+```
 
 #### 4. Configure Nginx
 
 Create a new Nginx configuration file:
 
-bash
+```bash
 sudo nano /etc/nginx/sites-available/your-domain.com
-
+```
 
 Add this configuration:
 
-
-nginx
+```nginx
 server {
-server_name your-domain.com www.your-domain.com;
-location / {
-proxy_pass http://localhost:5001;
-proxy_http_version 1.1;
-proxy_set_header Upgrade $http_upgrade;
-proxy_set_header Connection 'upgrade';
-proxy_set_header Host $host;
-proxy_cache_bypass $http_upgrade;
-}
-}
+    server_name your-domain.com www.your-domain.com;
 
-
+    location / {
+        proxy_pass http://localhost:5001;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+    }
+}
+```
 
 Create symbolic link:
 
-bash
+```bash
 sudo ln -s /etc/nginx/sites-available/your-domain.com /etc/nginx/sites-enabled/
+```
 
+Test Nginx configuration:
 
-Test Nginx configuration
+```bash
 sudo nginx -t
+```
 
+Restart Nginx:
 
-Restart Nginx
+```bash
 sudo systemctl restart nginx
-
+```
 
 #### 5. Domain Configuration
 
@@ -191,14 +234,16 @@ sudo systemctl restart nginx
 
 #### 6. SSL Certificate with Certbot
 
-bash
-Obtain and install SSL certificate
+```bash
+# Obtain and install SSL certificate
 sudo certbot --nginx -d your-domain.com -d www.your-domain.com
-Certbot will automatically modify your Nginx configuration
-Choose option 2 to redirect all HTTP traffic to HTTPS
-Test automatic renewal
-sudo certbot renew --dry-run
 
+# Certbot will automatically modify your Nginx configuration
+# Choose option 2 to redirect all HTTP traffic to HTTPS
+
+# Test automatic renewal
+sudo certbot renew --dry-run
+```
 
 #### 7. Maintenance
 
