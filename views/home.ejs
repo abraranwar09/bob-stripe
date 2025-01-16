@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stripe Microservice for Bob</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .header {
+            background-color: #4CAF50;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .content {
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        h1,
+        h2,
+        h3 {
+            color: #4CAF50;
+        }
+
+        p {
+            margin-bottom: 20px;
+        }
+
+        .code {
+            background-color: #e8e8e8;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: 'Courier New', Courier, monospace;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 10px;
+            background-color: #333;
+            color: white;
+            position: sticky;
+            bottom: 0;
+            width: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="content">
+        <h1>Stripe Microservice for Bob</h1>
+        <h2>Introduction</h2>
+        <p>The Stripe Microservice for Bob is a lightweight, deployable service designed to integrate subscription-based
+            payment capabilities into your projects using Stripe. This microservice is specifically tailored for
+            handling subscriptions through Stripe's pricing model, utilizing a predefined price ID set in the
+            environment configuration.</p>
+
+        <h2>Setup</h2>
+        <p>To set up the microservice, ensure you have the following environment variables configured in your
+            <code>.env</code> file:</p>
+        <div class="code">
+            STRIPE_SECRET_KEY=<br>
+            STRIPE_PRICE_ID=<br>
+            CLIENT_URL=<br>
+            HOME_URL=<br>
+        </div>
+        <p>These variables are crucial for the microservice to interact with Stripe's API and redirect users
+            appropriately after transactions.</p>
+
+        <h3>Quick Start</h3>
+        <p>To quickly start the application, use the provided bash script:</p>
+        <div class="code">
+            chmod +x run-stripe-microservice.sh
+            ./run-stripe-microservice.sh
+        </div>
+        <p>This script will check for necessary dependencies, set up the environment, and start the application.</p>
+
+        <h3>Run Development</h3>
+        <p>For development purposes, you can run the application using nodemon for automatic restarts on file changes:</p>
+        <div class="code">
+            npm run dev
+        </div>
+        <p>This command uses nodemon to watch for changes and restart the server automatically, facilitating a smoother development workflow.</p>
+
+        <h2>Using HOME_URL</h2>
+        <p>The <code>HOME_URL</code> environment variable is used to redirect users back to your application from the
+            pre-built success and cancel pages. Ensure this URL points to the appropriate location in your application
+            where users should land after a transaction.</p>
+
+        <h2>Customizing Success and Cancel Pages</h2>
+        <p>If you prefer not to use the pre-built success and cancel pages, you can host your own pages and update the
+            <code>CLIENT_URL</code> to point to these pages. Modify the URLs in <code>stripeService.js</code> to reflect
+            your hosted pages.</p>
+
+        <h2>Endpoints</h2>
+        <h3>POST /api/checkout</h3>
+        <p>This endpoint creates a Stripe checkout session for subscriptions. The <code>priceId</code> is automatically
+            retrieved from the environment configuration, ensuring a consistent subscription plan is used across all
+            transactions.</p>
+        <p>Example request:</p>
+        <div class="code">
+            POST /api/checkout<br>
+            Content-Type: application/json<br>
+            { }<br>
+        </div>
+        <p>No additional data is required in the request body.</p>
+
+        <h3>Example Response</h3>
+        <pre class="code">
+{
+    "id": "cs_test_a1WHz0EUClolNhVTsmjK7KWyVhUA6EqBqOESbVxUdTmOrrVBZzUnNmnYzz",
+    "object": "checkout.session",
+    "amount_subtotal": 3500,
+    "amount_total": 3500,
+    "currency": "usd",
+    "mode": "subscription",
+    "payment_status": "unpaid",
+    "status": "open",
+    "success_url": "http://localhost:5001/success",
+    "cancel_url": "http://localhost:5001/cancel",
+    "url": "https://checkout.stripe.com/c/pay/cs_test_a1WHz0EUClolNhVTsmjK7KWyVhUA6EqBqOESbVxUdTmOrrVBZzUnNmnYzz#fidkdWxOYHwnPyd1blpxYHZxWjA0S1M8SU9JdkNCYkFPS0F0V2lHY3FKM3NRdDZuQTBkTmBIQzUwdGxVbTd9T3FxTVxzNWBsd25EN3dOM288cXRSRnJyNzYzTTVGdDRtQFJXRkJqcjdjSlVmNTVoNVBCXDd%2FdycpJ2N3amhWYHdzYHcnP3F3cGApJ2lkfGpwcVF8dWAnPyd2bGtiaWBabHFgaCcpJ2BrZGdpYFVpZGZgbWppYWB3dic%2FcXdwYHgl"
+}
+        </pre>
+
+        <h2>Project Structure</h2>
+        <h3>Package Dependencies</h3>
+        <p>The microservice uses the following main dependencies:</p>
+        <ul>
+            <li><code>express</code>: Web framework for handling HTTP requests</li>
+            <li><code>stripe</code>: Official Stripe SDK for Node.js</li>
+            <li><code>dotenv</code>: Environment variable management</li>
+            <li><code>ejs</code>: Template engine for rendering views</li>
+        </ul>
+
+        <h3>Routes</h3>
+        <p>Routes are defined in <code>routes/checkoutRoutes.js</code>:</p>
+        <ul>
+            <li><code>POST /api/checkout</code>: Creates a Stripe checkout session</li>
+            <li><code>GET /success</code>: Renders success page after payment</li>
+            <li><code>GET /cancel</code>: Renders cancel page if payment fails</li>
+            <li><code>GET /</code>: Renders this documentation page</li>
+        </ul>
+
+        <h3>Controllers</h3>
+        <p>The <code>checkoutController.js</code> handles the business logic for checkout sessions:</p>
+        <div class="code">
+            const stripeService = require('../services/stripeService');
+
+            exports.createCheckoutSession = async (req, res) => {
+            console.log('Controller: Starting to create a checkout session');
+            try {
+            const session = await stripeService.createCheckoutSession(req.body.priceId);
+            console.log('Controller: Checkout session created successfully');
+            res.json(session);
+            } catch (error) {
+            console.error(`Controller: Error creating checkout session: ${error.message}`);
+            res.status(500).json({ error: error.message });
+            }
+            };
+        </div>
+
+        <h3>Services</h3>
+        <p>The <code>stripeService.js</code> contains the Stripe integration logic:</p>
+        <ul>
+            <li>Creates checkout sessions using the Stripe API</li>
+            <li>Configures subscription parameters</li>
+            <li>Handles success and cancel URL redirects</li>
+            <li>Uses environment variables for configuration</li>
+        </ul>
+
+        <div class="code">
+            const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+
+            exports.createCheckoutSession = async () => {
+              const priceId = process.env.STRIPE_PRICE_ID;
+            
+              if (!priceId) {
+                throw new Error('Price ID is required to create a checkout session');
+              }
+            
+              console.log(`[services/stripeService.js] Creating Stripe checkout session for subscription with price ID: ${priceId}`);
+              
+              const session = await stripe.checkout.sessions.create({
+                payment_method_types: ['card'],
+                line_items: [
+                  {
+                    price: priceId,
+                    quantity: 1,
+                  },
+                ],
+                mode: 'subscription',
+                success_url: `${process.env.CLIENT_URL}/success`,
+                cancel_url: `${process.env.CLIENT_URL}/cancel`,
+              });
+            
+              console.log('[services/stripeService.js] Stripe checkout session for subscription created');
+              return session;
+            }; 
+        </div>
+
+        <h3>Views</h3>
+        <p>The application includes three EJS (embedded JavaScript) templates:</p>
+        <ul>
+            <li><code>home.ejs</code>: This documentation page</li>
+            <li><code>success/index.ejs</code>: Payment success page with HOME_URL redirect</li>
+            <li><code>cancel/index.ejs</code>: Payment cancellation page with HOME_URL redirect</li>
+        </ul>
+
+        <h3>Environment Configuration</h3>
+        <p>The application uses environment variables for configuration, loaded via dotenv:</p>
+        <ul>
+            <li><code>STRIPE_SECRET_KEY</code>: Your Stripe secret key</li>
+            <li><code>STRIPE_PRICE_ID</code>: The ID of your Stripe subscription price</li>
+            <li><code>CLIENT_URL</code>: The URL where this microservice is hosted</li>
+            <li><code>HOME_URL</code>: The URL to redirect back to your main application</li>
+            <li><code>PORT</code>: Optional port number (defaults to 5001)</li>
+        </ul>
+
+        <h2>Deployment</h2>
+        <h3>AWS Deployment</h3>
+        <h4>1. EC2 Setup</h4>
+        <ol>
+            <li>Launch an EC2 instance (Ubuntu Server recommended)
+                <ul>
+                    <li>Choose t2.micro for free tier</li>
+                    <li>Configure security group to allow HTTP (80), HTTPS (443), and SSH (22)</li>
+                    <li>Create and download your key pair (.pem file)</li>
+                </ul>
+            </li>
+            <li>SSH into your instance:
+                <div class="code">chmod 400 your-key.pem
+                    ssh -i your-key.pem ubuntu@your-ec2-ip</div>
+            </li>
+        </ol>
+
+        <h4>2. Install Required Software</h4>
+        <div class="code">
+            # Update package list
+            sudo apt update
+
+            # Install Node.js and npm
+            curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+            sudo apt install -y nodejs
+
+            # Install Nginx
+            sudo apt install nginx
+
+            # Install Certbot and Nginx plugin
+            sudo apt install certbot python3-certbot-nginx
+        </div>
+
+        <h4>3. Deploy Your Application</h4>
+        <div class="code">
+            # Clone your repository
+            git clone https://github.com/yourusername/your-repo.git
+            cd your-repo
+
+            # Install dependencies
+            npm install
+
+            # Create .env file
+            nano .env
+            # Add your environment variables here
+
+            # Install PM2 for process management
+            sudo npm install -g pm2
+
+            # Start your application with PM2
+            pm2 start server.js
+            pm2 startup
+            pm2 save
+        </div>
+
+        <h4>4. Configure Nginx</h4>
+        <p>Create a new Nginx configuration file:</p>
+        <div class="code">
+            sudo nano /etc/nginx/sites-available/your-domain.com
+
+            # Add this configuration:
+            server {
+            server_name your-domain.com www.your-domain.com;
+
+            location / {
+            proxy_pass http://localhost:5001;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection 'upgrade';
+            proxy_set_header Host $host;
+            proxy_cache_bypass $http_upgrade;
+            }
+            }
+
+            # Create symbolic link
+            sudo ln -s /etc/nginx/sites-available/your-domain.com /etc/nginx/sites-enabled/
+
+            # Test Nginx configuration
+            sudo nginx -t
+
+            # Restart Nginx
+            sudo systemctl restart nginx
+        </div>
+
+        <h4>5. Domain Configuration</h4>
+        <ol>
+            <li>Go to your domain registrar's DNS settings</li>
+            <li>Add an A record:
+                <ul>
+                    <li>Host: @ (or empty)</li>
+                    <li>Value: Your EC2 instance's public IP</li>
+                </ul>
+            </li>
+            <li>Add another A record for www subdomain:
+                <ul>
+                    <li>Host: www</li>
+                    <li>Value: Your EC2 instance's public IP</li>
+                </ul>
+            </li>
+            <li>Wait for DNS propagation (can take up to 48 hours)</li>
+        </ol>
+
+        <h4>6. SSL Certificate with Certbot</h4>
+        <div class="code">
+            # Obtain and install SSL certificate
+            sudo certbot --nginx -d your-domain.com -d www.your-domain.com
+
+            # Certbot will automatically modify your Nginx configuration
+            # Choose option 2 to redirect all HTTP traffic to HTTPS
+
+            # Test automatic renewal
+            sudo certbot renew --dry-run
+        </div>
+
+        <h4>7. Maintenance</h4>
+        <ul>
+            <li>Monitor logs:
+                <div class="code">
+                    pm2 logs
+                    sudo tail -f /var/log/nginx/error.log</div>
+            </li>
+            <li>Update application:
+                <div class="code">
+                    cd ~/your-repo
+                    git pull
+                    npm install
+                    pm2 restart all</div>
+            </li>
+            <li>SSL certificate auto-renews every 90 days</li>
+        </ul>
+
+        <h3>Replit Deployment</h3>
+        <ol>
+            <li>Create a new Replit project and import your repository.</li>
+            <li>Set up environment variables in the Replit secrets manager.</li>
+            <li>Ensure your application listens on the port provided by Replit.</li>
+            <li>Use Replit's built-in domain management to configure a custom domain if needed.</li>
+        </ol>
+
+        <h2>Domain and DNS Configuration</h2>
+        <p>For both AWS and Replit, ensure your domain's DNS settings are configured to point to your server's IP
+            address. Use a service like Route 53 (AWS) or your domain registrar's DNS management tools to set up A
+            records and CNAMEs as needed.</p>
+
+        <h2>Nginx and SSL with Certbot</h2>
+        <p>On AWS, install Nginx and configure it to serve your Node.js application. Use Certbot to obtain and renew SSL
+            certificates automatically, ensuring secure connections to your microservice.</p>
+    </div>
+    <div class="footer">
+        <p>Stripe Microservice for Bob</p>
+    </div>
+</body>
+
+</html>
