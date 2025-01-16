@@ -1,4 +1,4 @@
-# Stripe SubscriptionMicroservice for Bob
+# Stripe Subscription Microservice for Bob
 
 ## Introduction
 
