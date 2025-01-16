@@ -76,6 +76,50 @@ No additional data is required in the request body.
 }
 ```
 
+## Saving Checkout Session Details
+
+To save checkout session details to your own database, you can utilize the `manage-session.js` file. This file should contain the logic to handle the session data retrieved from Stripe and save it to your database.
+
+Here is a basic outline of how you can implement this:
+
+```javascript
+// src/utilities/manage-session.js
+
+// Import your database client
+const dbClient = require('../path/to/your/dbClient');
+
+// Function to save session details
+async function saveSessionDetails(session) {
+    try {
+        // Example: Insert session details into your database
+        await dbClient.query('INSERT INTO sessions (id, amount_total, currency, status) VALUES ($1, $2, $3, $4)', [
+            session.id,
+            session.amount_total,
+            session.currency,
+            session.status
+        ]);
+        console.log('Session details saved successfully');
+    } catch (error) {
+        console.error('Error saving session details:', error);
+    }
+}
+
+module.exports = { saveSessionDetails };
+```
+
+In your application, you can call this function after retrieving the session details from Stripe:
+
+```javascript
+// Example usage in your controller or service
+const { saveSessionDetails } = require('./utilities/manage-session');
+
+// After retrieving the session
+const session = await stripeService.retrieveCheckoutSession(sessionId);
+await saveSessionDetails(session);
+```
+
+This setup allows you to store important session information such as the session ID, total amount, currency, and status in your database for future reference or processing.
+
 ## Project Structure
 
 ### Package Dependencies

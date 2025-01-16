@@ -13,7 +13,7 @@ app.set('view engine', 'ejs');
 app.use(express.json());
 
 // Serve static files from the public directory
-// app.use(express.static('public'));
+app.use(express.static('src'));
 
 // Import routes
 const checkoutRoutes = require('./routes/checkoutRoutes');

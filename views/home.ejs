@@ -59,6 +59,23 @@
             bottom: 0;
             width: 100%;
         }
+
+        .button {
+            display: inline-block;
+            padding: 10px 20px;
+            font-size: 16px;
+            color: white;
+            background-color: #4CAF50;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-align: center;
+            text-decoration: none;
+        }
+
+        .button:hover {
+            background-color: #45a049;
+        }
     </style>
 </head>
 
@@ -70,6 +87,35 @@
             payment capabilities into your projects using Stripe. This microservice is specifically tailored for
             handling subscriptions through Stripe's pricing model, utilizing a predefined price ID set in the
             environment configuration.</p>
+
+        <!-- Test Checkout Button -->
+        <h2>Test Checkout</h2>
+        <p>Click the button below to test the Stripe checkout integration:</p>
+        <button class="button" onclick="testCheckout()">Test Checkout</button>
+
+        <script>
+            function testCheckout() {
+                fetch('/api/checkout', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({})
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.url) {
+                        window.open(data.url, '_blank');
+                    } else {
+                        alert('Failed to create checkout session');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while creating checkout session');
+                });
+            }
+        </script>
 
         <h2>Setup</h2>
         <p>To set up the microservice, ensure you have the following environment variables configured in your
@@ -137,6 +183,49 @@
     "url": "https://checkout.stripe.com/c/pay/cs_test_a1WHz0EUClolNhVTsmjK7KWyVhUA6EqBqOESbVxUdTmOrrVBZzUnNmnYzz#fidkdWxOYHwnPyd1blpxYHZxWjA0S1M8SU9JdkNCYkFPS0F0V2lHY3FKM3NRdDZuQTBkTmBIQzUwdGxVbTd9T3FxTVxzNWBsd25EN3dOM288cXRSRnJyNzYzTTVGdDRtQFJXRkJqcjdjSlVmNTVoNVBCXDd%2FdycpJ2N3amhWYHdzYHcnP3F3cGApJ2lkfGpwcVF8dWAnPyd2bGtiaWBabHFgaCcpJ2BrZGdpYFVpZGZgbWppYWB3dic%2FcXdwYHgl"
 }
         </pre>
+
+        <h2>Saving Checkout Session Details</h2>
+        <p>To save checkout session details to your own database, you can utilize the <code>manage-session.js</code> file. This file should contain the logic to handle the session data retrieved from Stripe and save it to your database.</p>
+
+        <p>Here is a basic outline of how you can implement this:</p>
+
+        <div class="code">
+            // src/utilities/manage-session.js
+
+            // Import your database client
+            const dbClient = require('../path/to/your/dbClient');
+
+            // Function to save session details
+            async function saveSessionDetails(session) {
+                try {
+                    // Example: Insert session details into your database
+                    await dbClient.query('INSERT INTO sessions (id, amount_total, currency, status) VALUES ($1, $2, $3, $4)', [
+                        session.id,
+                        session.amount_total,
+                        session.currency,
+                        session.status
+                    ]);
+                    console.log('Session details saved successfully');
+                } catch (error) {
+                    console.error('Error saving session details:', error);
+                }
+            }
+
+            module.exports = { saveSessionDetails };
+        </div>
+
+        <p>In your application, you can call this function after retrieving the session details from Stripe:</p>
+
+        <div class="code">
+            // Example usage in your controller or service
+            const { saveSessionDetails } = require('./utilities/manage-session');
+
+            // After retrieving the session
+            const session = await stripeService.retrieveCheckoutSession(sessionId);
+            await saveSessionDetails(session);
+        </div>
+
+        <p>This setup allows you to store important session information such as the session ID, total amount, currency, and status in your database for future reference or processing.</p>
 
         <h2>Project Structure</h2>
         <h3>Package Dependencies</h3>
@@ -213,6 +302,8 @@
               return session;
             }; 
         </div>
+
+        
 
         <h3>Views</h3>
         <p>The application includes three EJS (embedded JavaScript) templates:</p>
@@ -379,6 +470,8 @@
         <h2>Nginx and SSL with Certbot</h2>
         <p>On AWS, install Nginx and configure it to serve your Node.js application. Use Certbot to obtain and renew SSL
             certificates automatically, ensuring secure connections to your microservice.</p>
+
+        
     </div>
     <div class="footer">
         <p>Stripe Microservice for Bob</p>

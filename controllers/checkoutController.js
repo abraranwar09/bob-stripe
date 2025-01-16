@@ -11,3 +11,14 @@ exports.createCheckoutSession = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 }; 
+
+exports.retrieveCheckoutSession = async (req, res) => {
+  try {
+    const sessionId = req.params.sessionId;
+    const session = await stripeService.retrieveCheckoutSession(sessionId);
+    res.json(session);
+  } catch (error) {
+    console.error(`Error retrieving checkout session: ${error.message}`);
+    res.status(500).json({ error: error.message });
+  }
+};
